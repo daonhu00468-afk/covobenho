@@ -21,6 +21,18 @@ header{
   text-align:center;
   font-size:24px;
   font-weight:bold;
+  position:relative;
+}
+
+#total{
+  position:absolute;
+  right:20px;
+  top:25px;
+  font-size:16px;
+  background:white;
+  color:#2e7d32;
+  padding:5px 12px;
+  border-radius:20px;
 }
 
 .container{
@@ -52,7 +64,8 @@ button{
 .addBtn{ background:#4CAF50; color:white;}
 .scanBtn{ background:#2196F3; color:white;}
 .logoutBtn{ background:#555; color:white;}
-.deleteBtn{ background:red; color:white; width:100px;}
+.deleteBtn{ background:red; color:white; width:90px;}
+.editBtn{ background:orange; color:white; width:90px;}
 
 .card{
   background:white;
@@ -72,7 +85,10 @@ button{
 
 <body>
 
-<header>📒 Quản Lý Cây Viết</header>
+<header>
+📒 Quản Lý Cây Viết
+<div id="total">Tổng: 0</div>
+</header>
 
 <div class="container">
 
@@ -86,8 +102,7 @@ button{
 
 <h2 id="hello"></h2>
 
-<!-- Thêm -->
-<h3>➕ Thêm cây viết</h3>
+<h3>➕ Thêm / Sửa cây viết</h3>
 <input id="ten" placeholder="Tên cây viết">
 <input id="note" placeholder="Chú thích">
 <input id="ma" placeholder="Mã cây viết">
@@ -95,11 +110,10 @@ button{
 <button class="scanBtn" onclick="scanAdd()">📷 Quét mã để thêm</button>
 <div id="readerAdd"></div>
 
-<button class="addBtn" onclick="them()">Thêm cây viết</button>
+<button class="addBtn" onclick="them()">Lưu</button>
 
 <hr>
 
-<!-- Tìm kiếm -->
 <h3>🔍 Tìm kiếm</h3>
 <input id="search" placeholder="Gõ tên hoặc mã..." onkeyup="tim()">
 <div id="count" class="resultCount"></div>
@@ -116,6 +130,7 @@ button{
 
 <script>
 let ds = JSON.parse(localStorage.getItem("pens")) || [];
+let editIndex = -1;
 
 /* LOGIN */
 function login(){
@@ -137,6 +152,11 @@ if(localStorage.getItem("user")){
   hienThi();
 }
 
+/* CẬP NHẬT TỔNG */
+function updateTotal(){
+  document.getElementById("total").innerHTML="Tổng: "+ds.length;
+}
+
 /* HIỂN THỊ */
 function hienThi(data=ds){
   let html="";
@@ -146,13 +166,15 @@ function hienThi(data=ds){
       <h2>${p.ten}</h2>
       <p>${p.note}</p>
       <p><b>Mã:</b> ${p.ma}</p>
+      <button class="editBtn" onclick="sua(${i})">Sửa</button>
       <button class="deleteBtn" onclick="xoa(${i})">Xoá</button>
     </div>`;
   });
   document.getElementById("list").innerHTML=html;
+  updateTotal();
 }
 
-/* THÊM */
+/* THÊM / SỬA */
 function them(){
   let ten=document.getElementById("ten").value;
   let note=document.getElementById("note").value;
@@ -160,12 +182,28 @@ function them(){
 
   if(ten==""||ma=="") return alert("Nhập đủ thông tin!");
 
-  ds.push({ten,note,ma});
+  if(editIndex==-1){
+    ds.push({ten,note,ma});
+  }else{
+    ds[editIndex]={ten,note,ma};
+    editIndex=-1;
+  }
+
   localStorage.setItem("pens",JSON.stringify(ds));
+
   document.getElementById("ten").value="";
   document.getElementById("note").value="";
   document.getElementById("ma").value="";
+
   hienThi();
+}
+
+/* SỬA */
+function sua(i){
+  document.getElementById("ten").value=ds[i].ten;
+  document.getElementById("note").value=ds[i].note;
+  document.getElementById("ma").value=ds[i].ma;
+  editIndex=i;
 }
 
 /* XOÁ */
