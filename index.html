@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản Lý Cây Viết</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#f2f2f2;
+}
+
+.header {
+  background:#4CAF50;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-weight:bold;
+  position:relative;
+}
+
+.total {
+  position:absolute;
+  right:15px;
+  top:15px;
+  font-size:14px;
+}
+
+.container {
+  padding:15px;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#4CAF50;
+  color:white;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.small-btn {
+  width:auto;
+  padding:5px 10px;
+  font-size:12px;
+  margin-right:5px;
+}
+
+.pen-item {
+  background:white;
+  padding:12px;
+  border-radius:15px;
+  margin-bottom:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.qr-btn {
+  background:#2196F3;
+}
+
+.stop-btn {
+  background:red;
+}
+
+#qr-container {
+  display:none;
+  text-align:center;
+}
+
+.scanner-box {
+  position:relative;
+  width:300px;
+  margin:auto;
+  border:4px solid #4CAF50;
+  border-radius:15px;
+  overflow:hidden;
+}
+
+#qr-reader {
+  width:100%;
+}
+
+.scan-line {
+  position:absolute;
+  width:100%;
+  height:3px;
+  background:red;
+  animation:scan 2s infinite alternate;
+}
+
+@keyframes scan {
+  from {top:0;}
+  to {top:95%;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+📒 Quản Lý Cây Viết
+<div class="total" id="total">Tổng: 0</div>
+</div>
+
+<div class="container">
+
+<h3 id="welcome"></h3>
+
+<input type="text" id="penName" placeholder="Tên cây viết...">
+<input type="text" id="penNote" placeholder="Chú thích...">
+<button onclick="addPen()">Thêm cây viết</button>
+
+<input type="text" id="searchInput" placeholder="🔍 Tìm cây viết..." onkeyup="renderPens()">
+
+<button onclick="startQR()" class="qr-btn">📷 Quét QR</button>
+
+<div id="qr-container">
+  <div class="scanner-box">
+    <div id="qr-reader"></div>
+    <div class="scan-line"></div>
+  </div>
+  <button onclick="stopQR()" class="stop-btn">❌ Tắt Camera</button>
+</div>
+
+<div id="penList"></div>
+
+<button onclick="logout()" style="background:#555;">Đăng xuất</button>
+
+</div>
+
+<audio id="beepSound">
+<source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
+</audio>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let user = localStorage.getItem("user");
+if(!user){
+  user = prompt("Nhập tên của bạn:");
+  localStorage.setItem("user", user);
+}
+document.getElementById("welcome").innerText = "Xin chào: " + user;
+
+let pens = JSON.parse(localStorage.getItem("pens")) || [];
+let qrScanner;
+
+function saveData(){
+  localStorage.setItem("pens", JSON.stringify(pens));
+}
+
+function updateTotal(){
+  document.getElementById("total").innerText = "Tổng: " + pens.length;
+}
+
+function addPen(){
+  const name = document.getElementById("penName").value.trim();
+  const note = document.getElementById("penNote").value.trim();
+
+  if(name===""){
+    alert("Bạn chưa nhập tên!");
+    return;
+  }
+
+  const code = "PEN-" + Date.now();
+
+  pens.push({name, note, code});
+  saveData();
+  renderPens();
+
+  document.getElementById("penName").value="";
+  document.getElementById("penNote").value="";
+}
+
+function deletePen(index){
+  if(confirm("Xoá cây viết này?")){
+    pens.splice(index,1);
+    saveData();
+    renderPens();
+  }
+}
+
+function renderPens(){
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const list = document.getElementById("penList");
+  list.innerHTML="";
+
+  pens.forEach((pen,index)=>{
+    if(pen.name.toLowerCase().includes(search)){
+      list.innerHTML += `
+      <div class="pen-item">
+        <b>${pen.name}</b><br>
+        <small>${pen.note}</small><br>
+        <small><b>Mã:</b> ${pen.code}</small><br><br>
+        <button class="small-btn" onclick="deletePen(${index})" style="background:red;">Xoá</button>
+      </div>`;
+    }
+  });
+
+  updateTotal();
+}
+
+function startQR(){
+  document.getElementById("qr-container").style.display="block";
+  qrScanner = new Html5Qrcode("qr-reader");
+
+  qrScanner.start(
+    {facingMode:"environment"},
+    {fps:10, qrbox:250},
+    (message)=>{
+      const found = pens.find(p=>p.code===message);
+
+      if(found){
+        alert("✅ Tìm thấy!\nTên: "+found.name+"\nChú thích: "+found.note);
+      }else{
+        alert("❌ Chưa mua cây viết này!");
+      }
+
+      document.getElementById("beepSound").play();
+      if(navigator.vibrate) navigator.vibrate(200);
+
+      stopQR();
+    }
+  );
+}
+
+function stopQR(){
+  if(qrScanner){
+    qrScanner.stop().then(()=>{
+      document.getElementById("qr-container").style.display="none";
+    });
+  }
+}
+
+function logout(){
+  localStorage.removeItem("user");
+  location.reload();
+}
+
+renderPens();
+</script>
+
+</body>
+</html>
