@@ -1,256 +1,187 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
 <title>Quản Lý Cây Viết</title>
-
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
+  font-family: Arial;
+  background:#f2f2f2;
+  padding:15px;
 }
 
-header{
-background:#4CAF50;
-color:white;
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-font-weight:bold;
-}
-
-.container{
-padding:15px;
+h2{
+  background:#4CAF50;
+  color:white;
+  padding:15px;
+  border-radius:10px;
 }
 
 input{
-width:100%;
-padding:12px;
-margin:6px 0;
-border-radius:10px;
-border:1px solid #ccc;
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
 
 button{
-width:100%;
-padding:12px;
-margin:6px 0;
-border:none;
-border-radius:10px;
-font-weight:bold;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  width:100%;
+  margin-top:8px;
+  font-weight:bold;
 }
 
-.add-btn{background:#4CAF50;color:white;}
-.qr-btn{background:#2196F3;color:white;}
-.logout-btn{background:#555;color:white;}
-.small-btn{
-width:auto;
-padding:6px 10px;
-border-radius:8px;
-font-size:13px;
-color:white;
+.addBtn{background:#4CAF50;color:white;}
+.scanBtn{background:#2196F3;color:white;}
+.deleteBtn{background:red;color:white;width:auto;padding:8px;}
+
+.card{
+  background:white;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
 }
 
-.pen-item{
-background:white;
-padding:12px;
-border-radius:12px;
-margin:10px 0;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+#reader{
+  margin-top:10px;
 }
-
-#suggestions div:hover{
-background:#eee;
-}
-
 </style>
 </head>
 
 <body>
 
-<div id="loginPage" class="container">
-<h2>Đăng nhập</h2>
-<input type="text" id="username" placeholder="Nhập tên của bạn">
-<button onclick="login()">Vào</button>
-</div>
+<h2>📒 Quản Lý Cây Viết</h2>
 
-<div id="mainPage" style="display:none;">
+<h3>Xin chào: Phammaivy</h3>
 
-<header>
-<span>📒 Quản Lý Cây Viết</span>
-<span>Tổng: <span id="totalCount">0</span></span>
-</header>
+<!-- THÊM CÂY VIẾT -->
+<input id="ten" placeholder="Tên cây viết">
+<input id="ghichu" placeholder="Chú thích">
+<input id="ma" placeholder="Mã cây viết">
 
-<div class="container">
+<button class="scanBtn" onclick="scanAdd()">📷 Quét mã (thêm)</button>
+<div id="readerAdd"></div>
 
-<h3 id="welcome"></h3>
-
-<input type="text" id="penName" placeholder="Tên cây viết">
-<input type="text" id="penNote" placeholder="Chú thích">
-<input type="text" id="penCode" placeholder="Mã cây viết">
-
-<button class="qr-btn" onclick="startQR()">📷 Quét mã</button>
-<div id="reader" style="margin:10px 0;"></div>
-
-<button class="add-btn" onclick="addPen()">Thêm cây viết</button>
+<button class="addBtn" onclick="them()">Thêm cây viết</button>
 
 <hr>
 
-<input type="text" id="searchInput"
-placeholder="🔍 Tìm theo tên hoặc mã..."
-oninput="searchPens()">
+<!-- TÌM KIẾM -->
+<h3>🔍 Tìm kiếm</h3>
 
-<div id="suggestions"
-style="background:white;border-radius:10px;overflow:hidden;"></div>
+<input id="searchInput" placeholder="Gõ tên hoặc mã..." onkeyup="goiY()">
 
-<div id="penList"></div>
+<button class="scanBtn" onclick="scanSearch()">📷 Quét mã (tìm)</button>
+<div id="readerSearch"></div>
 
-<button class="logout-btn" onclick="logout()">Đăng xuất</button>
+<div id="goiy"></div>
 
-</div>
-</div>
+<hr>
+
+<div id="danhsach"></div>
 
 <script>
+let ds = JSON.parse(localStorage.getItem("pens")) || [];
 
-let pens = JSON.parse(localStorage.getItem("pens")) || [];
-
-function login(){
-let name=document.getElementById("username").value;
-if(name==="") return;
-localStorage.setItem("user",name);
-showMain();
+function luu(){
+  localStorage.setItem("pens",JSON.stringify(ds));
 }
 
-function logout(){
-localStorage.removeItem("user");
-location.reload();
+function hienThi(list = ds){
+  let html="";
+  list.forEach((p,index)=>{
+    html+=`
+    <div class="card">
+      <b>${p.ten}</b><br>
+      ${p.ghichu}<br>
+      <b>Mã:</b> ${p.ma}<br><br>
+      <button class="deleteBtn" onclick="xoa(${index})">Xoá</button>
+    </div>`;
+  });
+  document.getElementById("danhsach").innerHTML=html;
 }
 
-function showMain(){
-document.getElementById("loginPage").style.display="none";
-document.getElementById("mainPage").style.display="block";
-document.getElementById("welcome").innerText="Xin chào: "+localStorage.getItem("user");
-renderPens();
+function them(){
+  let ten=document.getElementById("ten").value;
+  let ghichu=document.getElementById("ghichu").value;
+  let ma=document.getElementById("ma").value;
+
+  if(!ten || !ma){
+    alert("Nhập tên và mã!");
+    return;
+  }
+
+  ds.push({ten,ghichu,ma});
+  luu();
+  hienThi();
+
+  document.getElementById("ten").value="";
+  document.getElementById("ghichu").value="";
+  document.getElementById("ma").value="";
 }
 
-if(localStorage.getItem("user")){
-showMain();
+function xoa(i){
+  ds.splice(i,1);
+  luu();
+  hienThi();
 }
 
-function addPen(){
-let name=document.getElementById("penName").value;
-let note=document.getElementById("penNote").value;
-let code=document.getElementById("penCode").value;
-
-if(name===""||code===""){
-alert("Nhập tên và mã");
-return;
+function goiY(){
+  let key=document.getElementById("searchInput").value.toLowerCase();
+  let loc=ds.filter(p=> 
+    p.ten.toLowerCase().includes(key) || 
+    p.ma.toLowerCase().includes(key)
+  );
+  hienThi(loc);
 }
 
-pens.push({name,note,code});
-localStorage.setItem("pens",JSON.stringify(pens));
-
-document.getElementById("penName").value="";
-document.getElementById("penNote").value="";
-document.getElementById("penCode").value="";
-
-renderPens();
+//////////////////////
+// QUÉT ĐỂ THÊM
+//////////////////////
+function scanAdd(){
+  document.getElementById("readerAdd").innerHTML="";
+  let html5QrCode = new Html5Qrcode("readerAdd");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+      document.getElementById("ma").value = qrCodeMessage;
+      html5QrCode.stop();
+    }
+  );
 }
 
-function renderPens(){
-let list=document.getElementById("penList");
-list.innerHTML="";
-pens.forEach((pen,index)=>{
-list.innerHTML+=`
-<div class="pen-item">
-<b>${pen.name}</b><br>
-<small>${pen.note||""}</small><br>
-<small><b>Mã:</b> ${pen.code}</small><br><br>
-<button class="small-btn" style="background:red;"
-onclick="deletePen(${index})">Xoá</button>
-</div>`;
-});
-document.getElementById("totalCount").innerText=pens.length;
+//////////////////////
+// QUÉT ĐỂ TÌM
+//////////////////////
+function scanSearch(){
+  document.getElementById("readerSearch").innerHTML="";
+  let html5QrCode = new Html5Qrcode("readerSearch");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+
+      let found = ds.filter(p => p.ma === qrCodeMessage);
+
+      if(found.length > 0){
+        hienThi(found);
+      } else {
+        alert("❌ Chưa mua cây viết này");
+      }
+
+      html5QrCode.stop();
+    }
+  );
 }
 
-function deletePen(i){
-pens.splice(i,1);
-localStorage.setItem("pens",JSON.stringify(pens));
-renderPens();
-}
-
-function searchPens(){
-const keyword=document.getElementById("searchInput").value.toLowerCase();
-const suggestBox=document.getElementById("suggestions");
-const list=document.getElementById("penList");
-
-suggestBox.innerHTML="";
-list.innerHTML="";
-
-if(keyword===""){
-renderPens();
-return;
-}
-
-let matched=pens.filter(p=>
-p.name.toLowerCase().includes(keyword)||
-p.code.toLowerCase().includes(keyword)
-);
-
-suggestBox.innerHTML=
-`<div style="padding:8px;font-weight:bold;color:#4CAF50;">
-Tìm thấy ${matched.length} kết quả
-</div>`;
-
-if(matched.length===0){
-suggestBox.innerHTML+=
-`<div style="padding:8px;color:red;">Chưa mua</div>`;
-}
-
-matched.forEach(p=>{
-suggestBox.innerHTML+=
-`<div style="padding:8px;border-top:1px solid #eee;cursor:pointer;"
-onclick="selectSuggestion('${p.name}','${p.code}')">
-${p.name} - ${p.code}
-</div>`;
-});
-
-matched.forEach((pen,index)=>{
-list.innerHTML+=`
-<div class="pen-item">
-<b>${pen.name}</b><br>
-<small>${pen.note||""}</small><br>
-<small><b>Mã:</b> ${pen.code}</small><br><br>
-<button class="small-btn" style="background:red;"
-onclick="deletePen(${index})">Xoá</button>
-</div>`;
-});
-}
-
-function selectSuggestion(name,code){
-document.getElementById("searchInput").value=name;
-document.getElementById("suggestions").innerHTML="";
-renderPens();
-}
-
-function startQR(){
-const qr=new Html5Qrcode("reader");
-qr.start(
-{facingMode:"environment"},
-{fps:10,qrbox:250},
-(decodedText)=>{
-document.getElementById("penCode").value=decodedText;
-qr.stop();
-document.getElementById("reader").innerHTML="";
-},
-()=>{}
-);
-}
-
+hienThi();
 </script>
 
 </body>
