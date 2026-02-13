@@ -260,6 +260,28 @@ window.scanSearch=function(){
     document.getElementById("readerSearch").innerHTML="";
   });
 }
+  /* ===== KHOÁ WEB ===== */
+let KHOA_WEB = true; // true = khoá | false = mở
+
+if (KHOA_WEB) {
+  document.body.innerHTML = `
+    <div style="
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      background:linear-gradient(135deg,#2e7d32,#43a047);
+      color:white;
+      font-family:Arial;
+      text-align:center;
+    ">
+      <h1>🚫 HỆ THỐNG ĐANG BẢO TRÌ</h1>
+      <p>Website tạm thời khóa.</p>
+      <p>Vui lòng quay lại sau.</p>
+    </div>
+  `;
+}
 </script>
 
 
