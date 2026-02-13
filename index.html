@@ -8,71 +8,99 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   font-family: Arial, sans-serif;
-  background:#f4f6f9;
+  background:#eef2f3;
 }
 
+/* HEADER */
 header{
-  background:#2e7d32;
+  background:linear-gradient(135deg,#2e7d32,#43a047);
   color:white;
-  padding:20px;
+  padding:35px 20px 30px 20px;
   text-align:center;
-  font-size:24px;
+  border-bottom-left-radius:25px;
+  border-bottom-right-radius:25px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+.title{
+  font-size:28px;
   font-weight:bold;
-  position:relative;
+  letter-spacing:1px;
 }
 
 #total{
-  position:absolute;
-  right:20px;
-  top:25px;
-  font-size:16px;
+  margin-top:12px;
+  font-size:18px;
   background:white;
   color:#2e7d32;
-  padding:5px 12px;
-  border-radius:20px;
+  display:inline-block;
+  padding:8px 22px;
+  border-radius:30px;
+  font-weight:bold;
 }
 
+/* CONTAINER */
 .container{
   padding:20px;
-  max-width:500px;
+  max-width:550px;
   margin:auto;
 }
 
+/* INPUT */
 input{
   width:100%;
   padding:15px;
   margin:10px 0;
-  border-radius:12px;
+  border-radius:15px;
   border:1px solid #ccc;
   font-size:18px;
+  outline:none;
 }
 
+input:focus{
+  border:2px solid #2e7d32;
+}
+
+/* BUTTON */
 button{
   width:100%;
   padding:15px;
   margin:10px 0;
   border:none;
-  border-radius:12px;
+  border-radius:15px;
   font-size:18px;
   font-weight:bold;
   cursor:pointer;
+  transition:0.2s;
+}
+
+button:active{
+  transform:scale(0.97);
 }
 
 .addBtn{ background:#4CAF50; color:white;}
 .scanBtn{ background:#2196F3; color:white;}
 .logoutBtn{ background:#555; color:white;}
-.deleteBtn{ background:red; color:white; width:90px;}
-.editBtn{ background:orange; color:white; width:90px;}
+.deleteBtn{ background:#e53935; color:white; width:90px;}
+.editBtn{ background:#fb8c00; color:white; width:90px;}
 
 .card{
   background:white;
-  padding:15px;
-  border-radius:15px;
-  margin-top:15px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  padding:18px;
+  border-radius:18px;
+  margin-top:18px;
+  box-shadow:0 6px 15px rgba(0,0,0,0.1);
+}
+
+.card h2{
+  margin:0 0 5px 0;
 }
 
 .resultCount{
@@ -86,8 +114,8 @@ button{
 <body>
 
 <header>
-📒 Quản Lý Cây Viết
-<div id="total">Tổng: 0</div>
+  <div class="title">📒 Quản Lý Cây Viết</div>
+  <div id="total">Tổng: 0</div>
 </header>
 
 <div class="container">
@@ -213,7 +241,7 @@ function xoa(i){
   hienThi();
 }
 
-/* TÌM GÕ */
+/* TÌM */
 function tim(){
   let key=document.getElementById("search").value.toLowerCase();
   if(key==""){
